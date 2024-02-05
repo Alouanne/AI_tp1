@@ -16,6 +16,7 @@ def cross(A, B):
     return [a + b for a in A for b in B]
 
 
+
 digits = '123456789'
 rows = 'ABCDEFGHI'
 cols = digits
@@ -126,14 +127,62 @@ def search(values):
         return False  ## Failed earlier
     if all(len(values[s]) == 1 for s in squares):
         return values  ## Solved!
-    ## Chose the unfilled square s with the fewest possibilities
-    "n, s = min((len(values[s]), s) for s in squares if len(values[s]) > 1)"
-    s = random.choice(squares)
-    while len(s) <= 1:
-        s = random.choice(squares)
-
-    return some(search(assign(values.copy(), s, d))
+    num = 0
+    for s in squares:
+        num = num + len(values[s])
+    if (num/len(values) > 3):
+        values = nacked_Pair(values)
+        if all(len(values[s]) == 1 for s in squares):
+            return values  ## Solved!
+    # random choice
+    # s = random.choice(squares)
+    # while len(s) == 1:
+    #    s = random.choice(squares)
+    # locked canididates
+    n, s = min((len(values[s]), s) for s in squares if len(values[s]) > 1)
+    try:
+        return some(search(assign(values.copy(), s, d))
                 for d in values[s])
+    except:
+        return values
+
+def hidden_singles(values):
+    num = '123456789'
+    for unit in unitlist:
+
+        for lip in num:
+            places = ""
+            for s in unit:
+                if (lip in values[s]):
+                    places = s
+            if (len(places) == 1):
+                if not assign(values, places[0], lip):
+                    return False
+    return values
+
+
+def nacked_Pair(values):
+    results = [0]
+    num = 0
+
+    square = unitlist
+    while (num < 27):
+        for k in square[num]:
+            for s in square[num]:
+                if (len(values[s]) == 2 and len(values[k]) == 2):
+                    if s != k:
+                        if values[s] == values[k]:
+                            for x in square[num]:
+                                if (x != s and x != k):
+                                    i = 0
+                                    while (i < len(values[s])):
+                                        if(len(values[x]) != 1):
+                                            eliminate(values, x, values[s][i])
+                                        i = i + 1
+
+        num = num + 1
+
+    return values
 
 
 ################ Utilities ################
@@ -187,6 +236,7 @@ def solve_all(grids, name='', showif=0.0):
 
 def solved(values):
     "A puzzle is solved if each unit is a permutation of the digits 1 to 9."
+    nackedPair = False
 
     def unitsolved(unit): return set(values[s] for s in unit) == set(digits)
 
