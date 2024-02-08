@@ -130,10 +130,13 @@ def search(values):
     num = 0
     for s in squares:
         num = num + len(values[s])
-    if (num/len(values) > 3):
-        values = nacked_Pair(values)
-        if all(len(values[s]) == 1 for s in squares):
-            return values  ## Solved!
+
+    values = hillClimbingSetup(values)
+    return values
+    #if (num/len(values) > 3):
+     #   values = nacked_Pair(values)
+      #  if all(len(values[s]) == 1 for s in squares):
+       #     return values  ## Solved!
     # random choice
     # s = random.choice(squares)
     # while len(s) == 1:
@@ -159,7 +162,124 @@ def hidden_singles(values):
                 if not assign(values, places[0], lip):
                     return False
     return values
+def hillClimbingSetup(values):
+    unit = 18
+    valuesOri = values.copy()
+    while(unit < 27):
+        skip=0
+        num = 0
+        while (num < 9 and skip ==0):
+            loop = 0
+            numb = 0
+            while (numb < 9 and skip ==0):
+                if (len(values[unitlist[unit][numb]]) != 1):
+                    loop = 1
+                numb = numb + 1
 
+            if (loop == 0):
+                skip = 1
+            loop = 0
+            p = unitlist[unit]
+            try:
+                n, s = min((len(values[s]), s) for s in p if len(values[s]) > 1)
+
+                if(len(values[s]) != 1):
+                    val = values[s][1]
+
+                    while(loop < 9 and skip == 0):
+
+                        if(p[loop] != s and len(values[p[loop]]) != 1):
+                            values[p[loop]] = values[p[loop]].replace(val, '')
+
+                            if (len(values[p[loop]]) == 1):
+                                looper = 0
+                                while (looper < 9 ):
+                                    if (p[looper] != p[loop]):
+                                        values[p[looper]] = values[p[looper]].replace(values[p[loop]], '')
+
+                                    looper = looper + 1
+                        else:
+                            values[s] = val
+
+                        loop = loop+1
+                num = num+1
+            except:
+                skip = 1
+
+        unit = unit + 1
+    #print("start")
+    hillClimbingChecker(values, valuesOri)
+    #print(values)
+    return values
+
+def hillClimbingChecker(values, ValOrigi):
+    base = conflictCheck(values)
+    num = 0
+    numk = 0
+    tab = [[0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+    unit = [0,1,2,3,4,5,6,7,8]
+    if(base == 0 ):
+        print("Succes")
+        return values
+    else:
+        num = 0
+        while(numk < 1):
+            bs = 0
+            for a in unit:
+
+                num = 0
+                while(num < 1000):
+                    b = random.choice(unit)
+                    c = random.choice(unit)
+                    #print(num, a,b,c)
+
+
+                    if(c < b and len(ValOrigi[unitlist[a][c]]) != 1 and len(ValOrigi[unitlist[a][b]]) != 1 and (tab[b][c] == 0 or tab[c][b] == 0)):
+                        tab[b][c] = 1
+                        tab[c][b] = 1
+                        bs = 1
+                        try:
+                            valuesBack = values.copy()
+                        except:
+                            return values
+                        valuesBack[unitlist[a][b]],valuesBack[unitlist[a][c]]  = values[unitlist[a][c]], values[unitlist[a][b]]
+                        newB = conflictCheck(valuesBack)
+                        #print(newB, base)
+                        if(newB < base):
+                            #print("better", newB)
+                            values = hillClimbingChecker(valuesBack, ValOrigi)
+                            base = conflictCheck(values)
+                    else:
+                        if(len(ValOrigi[unitlist[a][b]]) == 1 and len(ValOrigi[unitlist[a][c]]) == 1):
+                            tab[b][c] = 2
+                            tab[c][b] = 2
+                    num = num + 1
+
+                if(bs==0 and a == 8):
+                    numk = numk + 1
+
+    return values
+
+
+
+def conflictCheck(values):
+    conflict = 0
+    for x in rows:
+        for y in digits:
+            for i in rows:
+                for k in digits:
+                    if(y == k or x == i):
+                        if(y > k or x > i):
+                            xy = x + y
+                            ij = i + k
+                            if(values[xy] == values[ij]):
+
+                                conflict = conflict + 1
+    #print(conflict)
+    return conflict
 
 def nacked_Pair(values):
     results = [0]
@@ -264,7 +384,7 @@ hard1 = '.....6....59.....82....8....45........3........6..3.54...325..6........
 if __name__ == '__main__':
     test()
     solve_all(from_file("top95.txt"), "95sudoku", None)
-    # solve_all(from_file("easy50.txt", '========'), "easy", None)
+    #solve_all(from_file("easy50.txt", '========'), "easy", None)
     # solve_all(from_file("easy50.txt", '========'), "easy", None)
     solve_all(from_file("100sudoku.txt"), "mid", None)
     # solve_all(from_file("hardest.txt"), "hardest", None)
