@@ -10,6 +10,8 @@
 ##   u is a unit,   e.g. ['A1','B1','C1','D1','E1','F1','G1','H1','I1']
 ##   grid is a grid,e.g. 81 non-blank chars, e.g. starting with '.18...7...
 ##   values is a dict of possible values, e.g. {'A1':'12349', 'A2':'8', ...}
+import math
+import random
 
 def cross(A, B):
     "Cross product of elements in A and elements in B."
@@ -131,7 +133,8 @@ def search(values):
     for s in squares:
         num = num + len(values[s])
 
-    values = hillClimbingSetup(values)
+    values = simulated_annealing(values)
+
     return values
     #if (num/len(values) > 3):
      #   values = nacked_Pair(values)
@@ -262,6 +265,34 @@ def hillClimbingChecker(values, ValOrigi):
                     numk = numk + 1
 
     return values
+
+
+
+def simulated_annealing(values):
+    current_values = values.copy()
+    current_conflict = conflictCheck(current_values)
+    T = 3.0  
+    T_min = 0.1  
+    alpha = 0.99  
+    while T > T_min:
+        i = 0
+        while i <= 100:
+            new_values = current_values.copy()
+            # selectionner deux cases dans un carre au hasard et on les echange
+            square = random.choice(unitlist[18:])  # choisir que parmis les carres 3x3
+            s1, s2 = random.sample(square, 2)
+            # Échanger les valeurs
+            new_values[s1], new_values[s2] = new_values[s2], new_values[s1]
+            new_conflict = conflictCheck(new_values)
+            # on calcule la difference de conflits
+            delta = new_conflict - current_conflict
+            if delta < 0 or random.uniform(0, 1) < math.exp(-delta / T):
+                current_values = new_values.copy()
+                current_conflict = new_conflict
+            i += 1
+        T = T * alpha  # Diminuer la température
+    return current_values
+
 
 
 
